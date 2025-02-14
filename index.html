@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeadlinesAI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #f5f5f5; line-height: 1.6; }
+        .container { max-width: 600px; margin: 2rem auto; padding: 1rem; }
+        #headlines-form { background-color: #1e1e1e; padding: 2rem; border-radius: 8px; }
+        h1 { text-align: center; margin-bottom: 1.5rem; color: #e63946; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #f5f5f5; }
+        input[type="text"] { width: 100%; padding: 0.5rem; border: 2px solid #e63946; border-radius: 4px; background-color: #2c2c2c; color: #f5f5f5; }
+        .radio-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group label { background-color: #2c2c2c; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.3s ease; }
+        .radio-group input[type="radio"]:checked + label { background-color: #e63946; color: #121212; }
+        .submit-btn { width: 100%; padding: 0.75rem; background-color: #e63946; color: #f5f5f5; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease; }
+        .submit-btn:hover { background-color: #ff4d5e; }
+        .result-section { background-color: #1e1e1e; margin-top: 1rem; padding: 1rem; border-radius: 8px; }
+        #content-output { margin-top: 1rem; white-space: pre-wrap; }
+        .loading, .error { text-align: center; }
+        .loading { color: #e63946; }
+        .error { color: #ff4d5e; }
+        .hidden { display: none; }
+        @media screen and (max-width: 600px) {
+            .container { width: 95%; margin: 1rem; padding: 0.5rem; }
+            .radio-group { flex-direction: column; }
+            .radio-group label { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="headlines-form">
+            <h1>HeadlinesAI Generator</h1>
+            
+            <div class="form-group">
+                <label for="company-name">Company Name</label>
+                <input type="text" id="company-name" name="company-name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="product">Product</label>
+                <input type="text" id="product" name="product" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Platform</label>
+                <div class="radio-group">
+                    <input type="radio" id="youtube" name="platform" value="YouTube" required>
+                    <label for="youtube">YouTube</label>
+                    
+                    <input type="radio" id="medium" name="platform" value="Medium">
+                    <label for="medium">Medium</label>
+                    
+                    <input type="radio" id="reddit" name="platform" value="Reddit">
+                    <label for="reddit">Reddit</label>
+                    
+                    <input type="radio" id="indiehackers" name="platform" value="IndieHackers">
+                    <label for="indiehackers">IndieHackers</label>
+                    
+                    <input type="radio" id="blog" name="platform" value="Blog">
+                    <label for="blog">Blog</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Content Type</label>
+                <div class="radio-group">
+                    <input type="radio" id="headlines" name="content-type" value="Headlines" required>
+                    <label for="headlines">Headlines</label>
+                    
+                    <input type="radio" id="call-to-action" name="content-type" value="CallToAction">
+                    <label for="call-to-action">Call to Action</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">Generate Content</button>
+        </form>
+        
+        <div id="result-section" class="result-section">
+            <h2>Generated Content</h2>
+            <div id="loading" class="loading hidden">Generating headlines...</div>
+            <div id="content-output"></div>
+            <div id="error-message" class="error hidden"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('headlines-form');
+            const contentOutput = document.getElementById('content-output');
+            const loadingIndicator = document.getElementById('loading');
+            const errorMessage = document.getElementById('error-message');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                contentOutput.textContent = '';
+                errorMessage.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden');
+
+                const formData = {
+                    companyName: document.getElementById('company-name').value,
+                    product: document.getElementById('product').value,
+                    platform: document.querySelector('input[name="platform"]:checked').value,
+                    contentType: document.querySelector('input[name="content-type"]:checked').value
+                };
+
+                try {
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    
+                    contentOutput.textContent = data.content;
+                    loadingIndicator.classList.add('hidden');
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    errorMessage.textContent = 'Failed to generate headlines. Please try again.';
+                    errorMessage.classList.remove('hidden');
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
